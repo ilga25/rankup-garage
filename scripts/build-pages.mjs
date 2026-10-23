@@ -7,6 +7,7 @@ for(const [key,asset] of Object.entries(assets)){
  let body=asset.body;
  if(!asset.binary&&typeof body==='string'){
   body=body.replaceAll(backend,origin+prefix);
+  if(origin==='https://rankup-garage.github.io' && (key.endsWith('.html')||key.startsWith('/guias/')))body=body.replace('</head>','<meta name="google-site-verification" content="uMz_1IfkeIMP0ePwcQ0-DNI5jEQS2VA-yHN2YY6JvP4"></head>');
   if(key.endsWith('.js'))body=body.replaceAll('href="/signin-with-chatgpt','href="'+backend+'/signin-with-chatgpt');
   if(key==='/index.html')body=body.replace('<head>','<head><base href="'+prefix+'/">').replace('<script src="network.js','<script>window.rankupPublicBackend='+JSON.stringify(backend)+';</script><script src="network.js');
   if(key.startsWith('/guias/'))body=body.replace('<head>','<head><base href="'+prefix+'/">');
