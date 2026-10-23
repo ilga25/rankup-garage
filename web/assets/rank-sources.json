@@ -1,0 +1,54 @@
+{
+  "sourcePage": "https://www.rocketleague.com/rundown?lang=en",
+  "retrieved": "2026-10-23",
+  "assets": [
+    {
+      "rank": "Bronze",
+      "file": "rank-0.png",
+      "source": "https://www.rocketleague.com/images/icons/rewards/Icon_SeasonRewardLevel1.png",
+      "bytes": 39684
+    },
+    {
+      "rank": "Silver",
+      "file": "rank-1.png",
+      "source": "https://www.rocketleague.com/images/icons/rewards/Icon_SeasonRewardLevel2.png",
+      "bytes": 24858
+    },
+    {
+      "rank": "Gold",
+      "file": "rank-2.png",
+      "source": "https://www.rocketleague.com/images/icons/rewards/Icon_SeasonRewardLevel3.png",
+      "bytes": 39113
+    },
+    {
+      "rank": "Platinum",
+      "file": "rank-3.png",
+      "source": "https://www.rocketleague.com/images/icons/rewards/Icon_SeasonRewardLevel4.png",
+      "bytes": 42002
+    },
+    {
+      "rank": "Diamond",
+      "file": "rank-4.png",
+      "source": "https://www.rocketleague.com/images/icons/rewards/Icon_SeasonRewardLevel5.png",
+      "bytes": 37216
+    },
+    {
+      "rank": "Champion",
+      "file": "rank-5.png",
+      "source": "https://www.rocketleague.com/images/icons/rewards/Icon_SeasonRewardLevel6.png",
+      "bytes": 37692
+    },
+    {
+      "rank": "Grand Champion",
+      "file": "rank-6.png",
+      "source": "https://www.rocketleague.com/images/icons/rewards/Icon_SeasonRewardLevel7.png",
+      "bytes": 40071
+    },
+    {
+      "rank": "Supersonic Legend",
+      "file": "rank-7.png",
+      "source": "https://www.rocketleague.com/images/icons/rewards/Icon_SeasonRewardLevel8.png",
+      "bytes": 28100
+    }
+  ]
+}

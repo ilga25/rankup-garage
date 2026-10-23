@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Sitemap: https://ilga25.github.io/rankup-garage/sitemap.xml
