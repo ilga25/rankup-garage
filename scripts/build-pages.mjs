@@ -18,3 +18,4 @@ for(const [key,asset] of Object.entries(assets)){
  const target=path.join(out,key.startsWith('/guias/')?key.slice(1)+'/index.html':key.slice(1));fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,body);
 }
 fs.writeFileSync(path.join(out,'.nojekyll'),'');console.log('Built GitHub Pages in docs/');
+

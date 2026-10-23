@@ -51,3 +51,13 @@ The four-language teammate board filters by playlist, rank, region and language.
 ## Search and monetization status
 
 The canonical public site is https://rankup-garage.github.io/. It has a separate verified Search Console URL-prefix property and its own sitemap.xml submission. Google live inspection confirms the home page is accessible and indexable; indexing was requested, not confirmed. The sitemap report initially says could not fetch and requires follow-up. AdSense ca-pub-2632653491273997 has a separate verified entry for rankup-garage.github.io with review requested. ads.txt and ownership metadata are generated; no advertising approval is claimed. The original Sites backend remains independent and live.
+
+## Player profiles, mechanics and community packs
+
+The library now includes 65 source-linked training packs, grouped into expandable skill sections and filtered by a player's self-reported playlist rank. Nine mechanic tutorials include direct creator links, specific practice and appropriate packs or free play. Player profile ranks and game IDs are private and owner-scoped. Sharing a game contact uses the existing explicitly published teammate listing.
+
+Authenticated players can publish up to five community training codes, each labelled as unverified player submissions, and withdraw their own posts. Monthly sponsorship proposals are private, require consent, and create no payment or contract. Newsletter and email features were cancelled by the owner. Automatic MMR is deferred until an authorized data source and budget exist.
+
+Client analytics records daily pageviews, referrer hostnames and outbound destination hostnames in R2, using Europe/Madrid dates. No query strings, full referrer paths, cookies or visitor identifiers are stored. DNT is respected. Missing history before collection began is unavailable, not zero. OWNER_EMAIL is a secret runtime value that restricts the private insights and sponsorship inbox to the confirmed Site owner. Player records and proposal contacts never enter this repository.
+
+Validation: 15 permission, consent, ownership, privacy and analytics tests pass. The local preview uses an in-memory test bucket and does not affect production.
