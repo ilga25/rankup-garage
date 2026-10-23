@@ -39,7 +39,7 @@ export async function handleFeatures(request,env,owner,url){
  }
  if(path==='/api/insights'){
   if(!owner)return json({error:'sign_in_required'},401);if(!env.OWNER_EMAIL||request.headers.get('oai-authenticated-user-email')?.toLowerCase()!==env.OWNER_EMAIL.toLowerCase())return json({error:'forbidden'},403);
-  const rows=[];for(let i=0;i<14;i++){const day=madridDay(new Date(Date.now()-i*86400000)),record=await read(bucket,`analytics-v1/${day}.json`);rows.push({day,available:day>='2026-10-23',...record||{pageviews:0,outbound:0,pages:{},referrers:{},destinations:{}}})}const proposals=[];for(const entry of (await objects(bucket,'collaborations-v1/')).slice(0,50)){const item=await read(bucket,entry.key);if(item)proposals.push(item)}return json({startedAt:'2026-10-23',timezone:'Europe/Madrid',days:rows,proposals,note:'Client events, not unique visitors. Missing historical data is unavailable, not zero.'});
+  const rows=[];for(let i=0;i<14;i++){const day=madridDay(new Date(Date.now()-i*86400000)),record=await read(bucket,`analytics-v1/${day}.json`);rows.push({day,available:day>='2026-10-24',...record||{pageviews:0,outbound:0,pages:{},referrers:{},destinations:{}}})}const proposals=[];for(const entry of (await objects(bucket,'collaborations-v1/')).slice(0,50)){const item=await read(bucket,entry.key);if(item)proposals.push(item)}return json({startedAt:'2026-10-24',timezone:'Europe/Madrid',days:rows,proposals,note:'Client events, not unique visitors. Missing historical data is unavailable, not zero.'});
  }
  return json({error:'not_found'},404);
 }
