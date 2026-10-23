@@ -1,5 +1,5 @@
 import fs from 'node:fs';import path from 'node:path';import {fileURLToPath} from 'node:url';import {prepareSEO} from './seo-assets.mjs';
-const root=fileURLToPath(new URL('../',import.meta.url)),out=path.join(root,'docs'),backend='https://rankup-garage-rl-2210.violetvenus256.chatgpt.site',prefix='/rankup-garage',origin='https://ilga25.github.io';
+const root=fileURLToPath(new URL('../',import.meta.url)),out=path.join(root,'docs'),backend='https://rankup-garage-rl-2210.violetvenus256.chatgpt.site',prefix=process.env.RANKUP_PAGES_PREFIX??'/rankup-garage',origin=process.env.RANKUP_PAGES_ORIGIN??'https://ilga25.github.io';
 // This directory is generated from web/ and SEO sources; it contains no account data.
 fs.mkdirSync(out,{recursive:true});const assets={};
 function collect(dir){for(const entry of fs.readdirSync(dir,{withFileTypes:true})){const file=path.join(dir,entry.name);if(entry.isDirectory())collect(file);else{const key='/'+path.relative(path.join(root,'web'),file).split(path.sep).join('/');assets[key]={body:fs.readFileSync(file),binary:!(/\.(html|js|css|json|svg)$/.test(file))};if(!assets[key].binary)assets[key].body=assets[key].body.toString('utf8')}}}collect(path.join(root,'web'));prepareSEO(assets,root);
