@@ -20,7 +20,7 @@ Only the nickname/platform are reused from legacy profiles as form defaults. Old
 
 `node tests/community.test.mjs` covers input validation, publication consent, authentication, ownership, duplicate submissions, monthly limits, conditional-write retry, filters and removal of the old endpoints. `node scripts/build.mjs` builds the deployment.
 
-Search Console verification and the GitHub migration remain pending. No AdSense is included.
+The public frontend is hosted at https://rankup-garage.github.io/. Search Console ownership is verified. AdSense ownership metadata is present; review has been requested, with no approval claimed.
 
 ## Selected training resources
 
@@ -36,13 +36,13 @@ The account panel uses dispatch-owned ChatGPT sign-in and displays the authentic
 
 The practice journal stores timestamped sessions in `progress-v1/YYYY-MM/<hashed-site-user-id>.json`, with minutes, attempts, successes, playlist, skill and notes. Sessions are private by default; publication requires an explicit checkbox. `/api/progress` returns only the current visitor’s private sessions and the community’s explicitly shared sessions. Deletion is owner-scoped. Totals describe self-reported practice, not verified game results.
 
-Three promotional carousels and the competitor review are separate export artifacts in `/workspace/promo-rankup-garage`. They are not bundled into the Worker. Search Console, AdSense, public access and independent email authentication remain pending.
+Three promotional carousels and the competitor review are separate export artifacts in `/workspace/promo-rankup-garage`. They are not bundled into the Worker. Public access is enabled. Independent email authentication is not implemented; sign-in remains with Sites.
 
 ## GitHub Pages and the community server
 
-The public frontend is generated in `docs/` by `node scripts/build-pages.mjs` and served by GitHub Pages from the `main` branch. The Sites Worker remains the account and data server. Pages makes credential-free, read-only requests through `/api/public/`; that gateway strips identity headers and cannot return private journal entries or accept writes. Signing in or publishing a listing opens the original authenticated Sites application.
+The branded frontend is generated in `docs/` and deployed by the Publish RankUp Garage workflow in `rankup-garage/rankup-garage.github.io`. That workflow checks out this public personal source repository and runs `RANKUP_PAGES_ORIGIN=https://rankup-garage.github.io RANKUP_PAGES_PREFIX='' node scripts/build-pages.mjs`. Trigger that workflow after source updates. The previous personal Pages address redirects to the branded hostname. The Sites Worker remains the account and data server. Pages makes credential-free, read-only requests through `/api/public/`; that gateway strips identity headers and cannot return private journal entries or accept writes. Signing in or publishing a listing opens the original authenticated Sites application.
 
-Run `node --test tests/community.test.mjs tests/teammates.test.mjs`, `node scripts/build.mjs` and `node scripts/build-pages.mjs` after edits. Commit the generated docs with the source changes. Repositories contain source and public media only; player records remain in R2 and are never committed.
+Run `node --test tests/community.test.mjs tests/teammates.test.mjs`, `node scripts/build.mjs` and `node scripts/build-pages.mjs` after edits. Deploy the brand workflow after source changes. Do not replace the redirect documents at the old personal Pages address with duplicate content. Repositories contain source and public media only; player records remain in R2 and are never committed.
 
 ## Find teammates
 
@@ -50,4 +50,4 @@ The four-language teammate board filters by playlist, rank, region and language.
 
 ## Search and monetization status
 
-The original Sites URL has its own verified Search Console URL-prefix property. Its sitemap was submitted, but Google's initial result was "could not fetch"; do not claim it has been indexed. Search Console verification is configured in seo/config.json. AdSense rejected the individual Sites hostname, so no independent RankUp AdSense site or ad script has been enabled. The future custom domain should get its own AdSense entry. Do not use another project's AdSense site as a substitute.
+The canonical public site is https://rankup-garage.github.io/. It has a separate verified Search Console URL-prefix property and its own sitemap.xml submission. Google live inspection confirms the home page is accessible and indexable; indexing was requested, not confirmed. The sitemap report initially says could not fetch and requires follow-up. AdSense ca-pub-2632653491273997 has a separate verified entry for rankup-garage.github.io with review requested. ads.txt and ownership metadata are generated; no advertising approval is claimed. The original Sites backend remains independent and live.
