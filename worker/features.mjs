@@ -15,7 +15,7 @@ export function validateSharedPack(input){
 }
 export function validateSponsor(input){if(input.consent!==true)throw Error('consent_required');if(!safeText(input.company,2,80)||!safeText(input.proposal,20,1000)||!['sponsor','featured','other'].includes(input.type))throw Error('invalid_sponsor');let website='';if(input.website){try{const url=new URL(input.website);if(url.protocol!=='https:'||url.username||url.password)throw Error();website=url.origin+url.pathname}catch{throw Error('invalid_sponsor')}}return {company:input.company.trim(),proposal:input.proposal.trim(),type:input.type,website,status:'pending_review'}}
 const cleanPack=(item,isMine)=>{const {owner,...safe}=item;return {...safe,isMine}};
-export async function handleFeatures(request,env,owner,url){
+export async function handleFeatures(request,env,owner,url,identity=null){
  const path=url.pathname,bucket=env.BUCKET;
  if(path==='/api/player-profile'){
   if(!owner)return json({error:'sign_in_required'},401);const key=`player-profiles-v1/${owner}.json`;
@@ -35,10 +35,10 @@ export async function handleFeatures(request,env,owner,url){
  if(path==='/api/collaborations'){
   if(!owner)return json({error:'sign_in_required'},401);const key=`collaborations-v1/${owner}.json`;
   if(request.method==='GET'){const item=await read(bucket,key);return json({proposal:item?{company:item.company,status:item.status,createdAt:item.createdAt}:null})}
-  if(request.method==='POST'){const valid=validateSponsor(await body(request)),old=await read(bucket,key);if(old&&Date.now()-Date.parse(old.createdAt)<86400000)return json({error:'daily_limit'},429);const item={...valid,accountEmail:request.headers.get('oai-authenticated-user-email')||null,createdAt:new Date().toISOString()};await bucket.put(key,JSON.stringify(item));return json({proposal:{company:item.company,status:item.status,createdAt:item.createdAt}},201)}
+  if(request.method==='POST'){const valid=validateSponsor(await body(request)),old=await read(bucket,key);if(old&&Date.now()-Date.parse(old.createdAt)<86400000)return json({error:'daily_limit'},429);const item={...valid,accountEmail:identity?.email||request.headers.get('oai-authenticated-user-email')||null,createdAt:new Date().toISOString()};await bucket.put(key,JSON.stringify(item));return json({proposal:{company:item.company,status:item.status,createdAt:item.createdAt}},201)}
  }
  if(path==='/api/insights'){
-  if(!owner)return json({error:'sign_in_required'},401);if(!env.OWNER_EMAIL||request.headers.get('oai-authenticated-user-email')?.toLowerCase()!==env.OWNER_EMAIL.toLowerCase())return json({error:'forbidden'},403);
+  if(!owner)return json({error:'sign_in_required'},401);if(!env.OWNER_EMAIL||(identity?.email||request.headers.get('oai-authenticated-user-email'))?.toLowerCase()!==env.OWNER_EMAIL.toLowerCase())return json({error:'forbidden'},403);
   const rows=[];for(let i=0;i<14;i++){const day=madridDay(new Date(Date.now()-i*86400000)),record=await read(bucket,`analytics-v1/${day}.json`);rows.push({day,available:day>='2026-10-24',...record||{pageviews:0,outbound:0,pages:{},referrers:{},destinations:{}}})}const proposals=[];for(const entry of (await objects(bucket,'collaborations-v1/')).slice(0,50)){const item=await read(bucket,entry.key);if(item)proposals.push(item)}return json({startedAt:'2026-10-24',timezone:'Europe/Madrid',days:rows,proposals,note:'Client events, not unique visitors. Missing historical data is unavailable, not zero.'});
  }
  return json({error:'not_found'},404);
