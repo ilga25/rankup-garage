@@ -3,6 +3,25 @@ const profile={platform:'epic',handle:'Duo player',region:'EU',languages:['es','
 const post={...profile,mode:'2v2',rank:2,goal:'ranked',mic:true,days:[1,5],start:'19:00',end:'22:00',contactPlatform:'discord',contactHandle:'player.gg',publish:true};
 const auth={'oai-authenticated-user-id':'alice','oai-authenticated-user-email':'private@example.test','Origin':'https://rankup.test'};
 const call=(env,path,method='GET',input,headers=auth)=>handleApi(new Request('https://rankup.test'+path,{method,headers:{...headers,'Content-Type':'application/json'},...(input!==undefined?{body:JSON.stringify(input)}:{})}),env);
+
+test('country is optional, validated separately from server, and only public in a published post',async()=>{
+ const env={BUCKET:new MemoryBucket()};
+ assert.equal(validateTeamPost(post).country,'');
+ for(const country of ['Madrid','<script>','XX',42])assert.throws(()=>validateTeamPost({...post,country}));
+ assert.equal((await call(env,'/api/team-profile','PUT',{...profile,country:'ES'})).status,200);
+ assert.equal((await (await call(env,'/api/teammates','GET',undefined,{})).json()).items.length,0);
+ await call(env,'/api/teammates','PUT',{...post,country:'ES'});
+ await call(env,'/api/teammates','PUT',{...post,country:'FR',handle:'French player'},{'oai-authenticated-user-id':'bob'});
+ await call(env,'/api/teammates','PUT',post,{'oai-authenticated-user-id':'legacy'});
+ const list=async query=>(await (await call(env,'/api/teammates?'+query,'GET',undefined,{})).json()).items;
+ assert.equal((await list('region=EU')).length,3);
+ const exact=await list('country=ES&region=EU&language=es&rank=2&goal=ranked&day=5');
+ assert.equal(exact.length,1);assert.equal(exact[0].country,'ES');assert(!('contactHandle' in exact[0]));
+ assert.equal((await list('country=ES&region=SAM')).length,0);
+ assert.equal((await list('country=ES&day=2')).length,0);
+ for(const query of ['country=XX','country=Madrid','day=8','goal=boost'])assert.equal((await call(env,'/api/teammates?'+query)).status,400);
+ assert.equal((await list('region=EU')).find(x=>x.country==='').handle,post.handle);
+});
 test('preferences stay private and require sign-in',async()=>{const env={BUCKET:new MemoryBucket()};assert.equal((await call(env,'/api/team-profile','PUT',profile,{})).status,401);assert.equal((await call(env,'/api/team-profile','PUT',{...profile,region:'bad'})).status,400);assert.equal((await call(env,'/api/team-profile','PUT',{...profile,timezone:'Bad/Zone'})).status,400);assert.equal((await call(env,'/api/team-profile','PUT',profile)).status,200);assert.equal((await (await call(env,'/api/team-profile')).json()).profile.region,'EU');assert.equal((await (await call(env,'/api/team-profile','GET',undefined,{'oai-authenticated-user-id':'bob'})).json()).profile,null);assert.equal((await (await call(env,'/api/teammates','GET',undefined,{})).json()).items.length,0)});
 test('explicit consent, game contact and schedule fields are validated',()=>{for(const patch of [{publish:false},{region:'UK'},{languages:[]},{rank:8},{rank:-1},{rank:1.5},{mode:'4v4'},{days:[]},{days:[8]},{start:'24:00'},{start:'19:00',end:'19:00'},{contactHandle:'a@example.test'},{contactPlatform:'email'}])assert.throws(()=>validateTeamPost({...post,...patch}));assert.equal(validateTeamPost({...post,start:'23:00',end:'01:00'}).end,'01:00')});
 test('posts filter correctly, contact needs sign-in and owner privacy holds',async()=>{const env={BUCKET:new MemoryBucket()};assert.equal((await call(env,'/api/teammates','PUT',post,{})).status,401);assert.equal((await call(env,'/api/teammates','PUT',post,{...auth,Origin:'https://evil.test'})).status,403);env.BUCKET.failNext=true;const res=await call(env,'/api/teammates','PUT',post);assert.equal(res.status,201);const saved=(await res.json()).item;let data=await (await call(env,'/api/teammates','GET',undefined,{})).json();assert.equal(data.items.length,1);assert.equal(data.mine,null);assert(!JSON.stringify(data).includes('player.gg'));assert(!JSON.stringify(data).includes('private@example.test'));assert(!JSON.stringify(data).includes('contactHandle'));assert.equal((await call(env,`/api/teammates/${saved.id}/contact`,'GET',undefined,{})).status,401);const contact=await (await call(env,`/api/teammates/${saved.id}/contact`,'GET',undefined,{'oai-authenticated-user-id':'bob'})).json();assert.equal(contact.handle,'player.gg');for(const query of ['region=NAE','mode=3v3','language=fr','rank=3'])assert.equal((await (await call(env,'/api/teammates?'+query)).json()).items.length,0);assert.equal((await (await call(env,'/api/teammates?rank=2&language=en&region=EU')).json()).items.length,1);assert.equal((await call(env,'/api/teammates?rank=abc')).status,400);assert.equal((await call(env,'/api/teammates','PUT',post)).status,429);assert.equal((await call(env,'/api/teammates','DELETE',undefined,{'oai-authenticated-user-id':'bob'})).status,404);assert.equal((await (await call(env,'/api/teammates')).json()).items.length,1);await call(env,'/api/teammates','DELETE');assert.equal((await (await call(env,'/api/teammates')).json()).items.length,0)});

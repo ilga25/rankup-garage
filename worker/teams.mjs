@@ -1,12 +1,14 @@
+import {teamCountries} from './countries.mjs';
 import {normalizeAccount,json,read,body,objects,modes} from './api.mjs';
 const teamRegions=new Set(['EU','NAE','NAW','SAM','OCE','ME','ASIA','SAF']);
 const teamLanguages=new Set(['es','en','fr','pt','de','it','ar','other']);
 const teamGoals=new Set(['ranked','practice','casual']);
 export function validateTeamProfile(input){
  const account=normalizeAccount(input.platform,input.handle);
+ const country=input.country??'';if(country!==''&&!teamCountries.has(country))throw Error('invalid_team_profile');
  if(!teamRegions.has(input.region)||!Array.isArray(input.languages)||input.languages.length<1||input.languages.length>4||input.languages.some(l=>!teamLanguages.has(l)))throw Error('invalid_team_profile');
  try{if(typeof input.timezone!=='string'||input.timezone.length>80)throw Error();new Intl.DateTimeFormat('en',{timeZone:input.timezone}).format()}catch{throw Error('invalid_team_profile')}
- return {...account,region:input.region,languages:[...new Set(input.languages)],timezone:input.timezone};
+ return {...account,country,region:input.region,languages:[...new Set(input.languages)],timezone:input.timezone};
 }
 export function validateTeamPost(input){
  const profile=validateTeamProfile(input);
@@ -17,7 +19,7 @@ export function validateTeamPost(input){
  if(/[^\s@]+@[^\s@]+\.[^\s@]+/.test(contact.handle))throw Error('invalid_team_post');
  return {...profile,mode:input.mode,rank:input.rank,goal:input.goal,mic:input.mic,days:[...new Set(input.days)].sort(),start:input.start,end:input.end,contactPlatform:input.contactPlatform,contactHandle:contact.handle};
 }
-function normalizeTeam(item){if(Array.isArray(item.languages))return item;return {...item,languages:[item.language],timezone:'UTC',days:[],start:'',end:'',mic:false,contactPlatform:item.platform,contactHandle:item.handle,updatedAt:item.createdAt,legacyAvailability:item.availability}}
+function normalizeTeam(item){if(Array.isArray(item.languages))return {...item,country:teamCountries.has(item.country)?item.country:''};return {...item,country:'',languages:[item.language],timezone:'UTC',days:[],start:'',end:'',mic:false,contactPlatform:item.platform,contactHandle:item.handle,updatedAt:item.createdAt,legacyAvailability:item.availability}}
 function publicTeam(item,isMine=false){const {contactPlatform,contactHandle,...safe}=item;return {...safe,isMine}}
 export async function handleTeams(request,bucket,owner,url){
  const path=url.pathname;
@@ -28,8 +30,8 @@ export async function handleTeams(request,bucket,owner,url){
   if(request.method==='PUT'){const profile=validateTeamProfile(await body(request));await bucket.put(key,JSON.stringify(profile));return json({profile})}
  }
  if(path==='/api/teammates'&&request.method==='GET'){
-  const filters=Object.fromEntries(url.searchParams);if((filters.region&&!teamRegions.has(filters.region))||(filters.mode&&!modes.has(filters.mode))||(filters.language&&!teamLanguages.has(filters.language))||(filters.rank!==undefined&&(!/^[0-7]$/.test(filters.rank))))return json({error:'invalid_filter'},400);
-  let mine=null,rows=[];const now=Date.now();for(const e of await objects(bucket,'teammates-v1/')){const raw=await read(bucket,e.key),item=raw?normalizeTeam(raw):null;if(!item||Date.parse(item.expiresAt)<=now)continue;const isMine=!!owner&&e.key===`teammates-v1/${owner}.json`;if(isMine)mine={...item,isMine:true};if((!filters.region||item.region===filters.region)&&(!filters.mode||item.mode===filters.mode)&&(!filters.language||item.languages.includes(filters.language))&&(filters.rank===undefined||item.rank===+filters.rank))rows.push(publicTeam(item,isMine))}
+  const filters=Object.fromEntries(url.searchParams);if((filters.goal&&!teamGoals.has(filters.goal))||(filters.day&&!/^[1-7]$/.test(filters.day))||(filters.country&&!teamCountries.has(filters.country))||(filters.region&&!teamRegions.has(filters.region))||(filters.mode&&!modes.has(filters.mode))||(filters.language&&!teamLanguages.has(filters.language))||(filters.rank!==undefined&&(!/^[0-7]$/.test(filters.rank))))return json({error:'invalid_filter'},400);
+  let mine=null,rows=[];const now=Date.now();for(const e of await objects(bucket,'teammates-v1/')){const raw=await read(bucket,e.key),item=raw?normalizeTeam(raw):null;if(!item||Date.parse(item.expiresAt)<=now)continue;const isMine=!!owner&&e.key===`teammates-v1/${owner}.json`;if(isMine)mine={...item,isMine:true};if((!filters.goal||item.goal===filters.goal)&&(!filters.day||item.days.includes(+filters.day))&&(!filters.country||item.country===filters.country)&&(!filters.region||item.region===filters.region)&&(!filters.mode||item.mode===filters.mode)&&(!filters.language||item.languages.includes(filters.language))&&(filters.rank===undefined||item.rank===+filters.rank))rows.push(publicTeam(item,isMine))}
   rows.sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt)||a.id.localeCompare(b.id));return json({authenticated:!!owner,mine,items:rows.slice(0,100),total:rows.length});
  }
  if(path==='/api/teammates'&&request.method==='PUT'){
